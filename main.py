@@ -22,53 +22,71 @@ def fmt_price(value):
 
 
 def track_open_positions(candles):
-    """Evaluate open virtual positions using each newly closed M30 candle."""
+    """Evaluate every newly closed M30 candle for open positions."""
     if not candles:
         return
-    candle = candles[-1]
-    candle_time = candle["time"]
 
     for pos in get_open_positions():
-        # Do not evaluate the candle that created this position.
-        if candle_time <= pos["entry_time"]:
-            continue
-        if pos.get("last_checked_candle") and candle_time <= pos["last_checked_candle"]:
-            continue
+        last_checked = (
+            pos.get("last_checked_candle")
+            or pos["candle_time"]
+        )
 
-        hit_sl = hit_tp = False
-        if pos["side"] == "BUY":
-            hit_sl = candle["low"] <= pos["stop_loss"]
-            hit_tp = candle["high"] >= pos["take_profit"]
-        else:
-            hit_sl = candle["high"] >= pos["stop_loss"]
-            hit_tp = candle["low"] <= pos["take_profit"]
+        new_candles = [
+            c for c in candles
+            if c["time"] > pos["candle_time"]
+            and c["time"] > last_checked
+        ]
 
-        # Conservative assumption when both levels occur in one M30 candle.
-        if hit_sl:
-            update_position(pos["id"], "SL", candle_time, pos["stop_loss"],
-                            candle_time, pos["id"])
-            send_message(
-                f"🔴 XAUUSD POSITION CLOSED — SL\n"
-                f"Strategi: {pos['strategy']}\nArah: {pos['side']}\n"
-                f"Entry: {fmt_price(pos['entry'])}\n"
-                f"Exit: {fmt_price(pos['stop_loss'])}\n"
-                f"Hasil: -1R\nCandle: {candle_time:%Y-%m-%d %H:%M} UTC\n"
-                "Catatan: jika TP dan SL tersentuh pada candle yang sama, SL dihitung lebih dahulu."
-            )
-        elif hit_tp:
-            update_position(pos["id"], "TP", candle_time, pos["take_profit"],
-                            candle_time, pos["id"])
-            send_message(
-                f"🟢 XAUUSD POSITION CLOSED — TP\n"
-                f"Strategi: {pos['strategy']}\nArah: {pos['side']}\n"
-                f"Entry: {fmt_price(pos['entry'])}\n"
-                f"Exit: {fmt_price(pos['take_profit'])}\n"
-                f"Hasil: +{pos['target_rr']:.1f}R\n"
-                f"Candle: {candle_time:%Y-%m-%d %H:%M} UTC"
-            )
-        else:
-            update_position(pos["id"], "OPEN", None, None, candle_time, pos["id"])
+        for candle in new_candles:
+            candle_time = candle["time"]
 
+            if pos["side"] == "BUY":
+                hit_sl = candle["low"] <= pos["stop_loss"]
+                hit_tp = candle["high"] >= pos["take_profit"]
+            else:
+                hit_sl = candle["high"] >= pos["stop_loss"]
+                hit_tp = candle["low"] <= pos["take_profit"]
+
+            # If both levels are hit, count SL first.
+            if hit_sl:
+                update_position(
+                    pos["id"], "SL", candle_time,
+                    pos["stop_loss"], candle_time, pos["id"]
+                )
+                send_message(
+                    f"🔴 XAUUSD POSITION CLOSED — SL\n"
+                    f"Strategi: {pos['strategy']}\n"
+                    f"Arah: {pos['side']}\n"
+                    f"Entry: {fmt_price(pos['entry'])}\n"
+                    f"Exit: {fmt_price(pos['stop_loss'])}\n"
+                    f"Hasil: -1R\n"
+                    f"Candle: {candle_time:%Y-%m-%d %H:%M} UTC"
+                )
+                break
+
+            elif hit_tp:
+                update_position(
+                    pos["id"], "TP", candle_time,
+                    pos["take_profit"], candle_time, pos["id"]
+                )
+                send_message(
+                    f"🟢 XAUUSD POSITION CLOSED — TP\n"
+                    f"Strategi: {pos['strategy']}\n"
+                    f"Arah: {pos['side']}\n"
+                    f"Entry: {fmt_price(pos['entry'])}\n"
+                    f"Exit: {fmt_price(pos['take_profit'])}\n"
+                    f"Hasil: +{pos['target_rr']:.1f}R\n"
+                    f"Candle: {candle_time:%Y-%m-%d %H:%M} UTC"
+                )
+                break
+
+            else:
+                update_position(
+                    pos["id"], "OPEN", None, None,
+                    candle_time, pos["id"]
+                )
+                last_checked = candle_time
 
 def run_scan():
     init_db()
