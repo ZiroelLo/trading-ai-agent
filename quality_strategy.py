@@ -212,6 +212,8 @@ def calculate_quality_indicators(candles):
     }
 
 
+
+
 def validate_candle(candle):
     open_price = float(candle["open"])
     close_price = float(candle["close"])
@@ -230,9 +232,11 @@ def validate_candle(candle):
 
     prices = (open_price, high, low, close_price)
 
+    # Reject NaN and Infinity
     if not all(math.isfinite(price) for price in prices):
         return invalid_result
 
+    # Validate OHLC consistency
     if high < max(open_price, close_price):
         return invalid_result
 
@@ -254,6 +258,7 @@ def validate_candle(candle):
         "bullish": close_price > open_price,
         "bearish": close_price < open_price,
     }
+
 
 
 def detect_modified_crossover(candles, ind, i=None):
