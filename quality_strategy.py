@@ -1,3 +1,5 @@
+import math
+
 
 def ema(values, period):
     """EMA seeded with the first available value."""
@@ -212,25 +214,42 @@ def calculate_quality_indicators(candles):
     }
 
 
+
+
 def validate_candle(candle):
     open_price = float(candle["open"])
     close_price = float(candle["close"])
     high = float(candle["high"])
     low = float(candle["low"])
 
+    invalid_result = {
+        "valid": False,
+        "body_ratio": 0.0,
+        "body": 0.0,
+        "lower_wick": 0.0,
+        "upper_wick": 0.0,
+        "bullish": False,
+        "bearish": False,
+    }
+
+    prices = (open_price, high, low, close_price)
+
+    # Reject NaN and Infinity
+    if not all(math.isfinite(price) for price in prices):
+        return invalid_result
+
+    # Validate OHLC consistency
+    if high < max(open_price, close_price):
+        return invalid_result
+
+    if low > min(open_price, close_price):
+        return invalid_result
+
     candle_range = high - low
     body = abs(close_price - open_price)
 
     if candle_range <= 0:
-        return {
-            "valid": False,
-            "body_ratio": 0.0,
-            "body": body,
-            "lower_wick": 0.0,
-            "upper_wick": 0.0,
-            "bullish": False,
-            "bearish": False,
-        }
+        return invalid_result
 
     return {
         "valid": True,
@@ -241,6 +260,7 @@ def validate_candle(candle):
         "bullish": close_price > open_price,
         "bearish": close_price < open_price,
     }
+
 
 
 def detect_modified_crossover(candles, ind, i=None):
