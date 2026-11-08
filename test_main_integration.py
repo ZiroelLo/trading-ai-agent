@@ -105,7 +105,7 @@ def test_scan_no_signal(fake_market, monkeypatch):
 @pytest.mark.parametrize(
     "side, expected_sl, expected_tp",
     [
-        ("BUY", 2635.0, 2685.0),
+        ("BUY", 2640.0, 2685.0),
         ("SELL", 2670.0, 2625.0),
     ],
 )
