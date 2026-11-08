@@ -14,7 +14,27 @@ from database import (
 from telegram_bot import send_message, send_photo
 
 WIB = ZoneInfo("Asia/Jakarta")
+NEW_YORK = ZoneInfo("America/New_York")
 UTC = timezone.utc
+
+
+def is_forex_market_open():
+    now = datetime.now(NEW_YORK)
+    weekday = now.weekday()
+
+    # Sabtu: pasar tutup
+    if weekday == 5:
+        return False
+
+    # Jumat pukul 17.00 ke atas: pasar tutup
+    if weekday == 4 and now.hour >= 17:
+        return False
+
+    # Minggu sebelum pukul 17.00: pasar tutup
+    if weekday == 6 and now.hour < 17:
+        return False
+
+    return True
 
 
 def fmt_price(value):
@@ -89,6 +109,10 @@ def track_open_positions(candles):
                 last_checked = candle_time
 
 def run_scan():
+    if not is_forex_market_open():
+        print("Forex market closed — scanner skipped.")
+        return
+
     init_db()
     candles = get_closed_candles()
     indicators = calculate_indicators(candles)
