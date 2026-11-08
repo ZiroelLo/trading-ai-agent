@@ -520,3 +520,67 @@ def test_adx14_against_independent_reference_values():
             assert actual_value == pytest.approx(
                 expected_value, abs=1e-8
             )
+def test_invalid_ohlc_high_below_open():
+    candle = {
+        "open": 105,
+        "high": 103,
+        "low": 99,
+        "close": 102,
+    }
+
+    assert validate_candle(candle)["valid"] is False
+
+
+def test_invalid_ohlc_low_above_close():
+    candle = {
+        "open": 100,
+        "high": 110,
+        "low": 105,
+        "close": 103,
+    }
+
+    assert validate_candle(candle)["valid"] is False
+
+
+def test_invalid_ohlc_high_below_close():
+    candle = {
+        "open": 100,
+        "high": 102,
+        "low": 99,
+        "close": 105,
+    }
+
+    assert validate_candle(candle)["valid"] is False
+
+
+def test_invalid_ohlc_low_above_open():
+    candle = {
+        "open": 105,
+        "high": 110,
+        "low": 103,
+        "close": 100,
+    }
+
+    assert validate_candle(candle)["valid"] is False
+
+
+def test_nan_candle_invalid():
+    candle = {
+        "open": 100,
+        "high": float("nan"),
+        "low": 99,
+        "close": 105,
+    }
+
+    assert validate_candle(candle)["valid"] is False
+
+
+def test_infinite_candle_invalid():
+    candle = {
+        "open": 100,
+        "high": float("inf"),
+        "low": 99,
+        "close": 105,
+    }
+
+    assert validate_candle(candle)["valid"] is False
