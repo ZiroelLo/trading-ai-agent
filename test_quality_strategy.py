@@ -247,13 +247,19 @@ def test_adx_strong_one_directional_market():
 
 def test_modified_crossover_buy():
     candles = [
-        {
-            "open": 100,
-            "high": 106,
-            "low": 99,
-            "close": 105,
-        }
-    ]
+    {
+        "open": 100,
+        "high": 106,
+        "low": 99,
+        "close": 105,
+    },
+    {
+        "open": 100,
+        "high": 106,
+        "low": 99,
+        "close": 105,
+    },
+]
 
     ind = make_test_indicators(
         fast=[100, 103],
@@ -268,12 +274,19 @@ def test_modified_crossover_buy():
 
 def test_modified_crossover_sell():
     candles = [
-        {
-            "open": 105,
-            "high": 106,
-            "low": 99,
-            "close": 100,
-        }
+    {
+        "open": 100,
+        "high": 106,
+        "low": 99,
+        "close": 105,
+    },
+    {
+        "open": 100,
+        "high": 106,
+        "low": 99,
+        "close": 105,
+    },
+]
     ]
 
     ind = make_test_indicators(
@@ -289,13 +302,19 @@ def test_modified_crossover_sell():
 
 def test_modified_crossover_does_not_require_wick_rejection():
     candles = [
-        {
-            "open": 100,
-            "high": 106,
-            "low": 99,
-            "close": 105,
-        }
-    ]
+    {
+        "open": 100,
+        "high": 106,
+        "low": 99,
+        "close": 105,
+    },
+    {
+        "open": 100,
+        "high": 106,
+        "low": 99,
+        "close": 105,
+    },
+]
 
     ind = make_test_indicators(
         fast=[100, 103],
@@ -312,12 +331,20 @@ def test_modified_crossover_does_not_require_wick_rejection():
 
 
 def test_modified_crossover_rejects_adx_below_20():
-    candles = [{
+    candles = [
+    {
         "open": 100,
         "high": 106,
         "low": 99,
         "close": 105,
-    }]
+    },
+    {
+        "open": 100,
+        "high": 106,
+        "low": 99,
+        "close": 105,
+    },
+]
 
     ind = make_test_indicators(
         fast=[100, 103],
@@ -331,12 +358,20 @@ def test_modified_crossover_rejects_adx_below_20():
 
 
 def test_modified_crossover_accepts_adx_exactly_20():
-    candles = [{
+    candles = [
+    {
         "open": 100,
         "high": 106,
         "low": 99,
         "close": 105,
-    }]
+    },
+    {
+        "open": 100,
+        "high": 106,
+        "low": 99,
+        "close": 105,
+    },
+]
 
     ind = make_test_indicators(
         fast=[100, 103],
