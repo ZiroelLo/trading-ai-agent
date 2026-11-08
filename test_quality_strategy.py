@@ -272,22 +272,23 @@ def test_modified_crossover_buy():
     assert detect_modified_crossover(candles, ind, 1) == "BUY"
 
 
+
 def test_modified_crossover_sell():
     candles = [
-    {
-        "open": 100,
-        "high": 106,
-        "low": 99,
-        "close": 105,
-    },
-    {
-        "open": 100,
-        "high": 106,
-        "low": 99,
-        "close": 105,
-    },
-]
-    
+        {
+            "open": 105,
+            "high": 106,
+            "low": 99,
+            "close": 100,
+        },
+        {
+            "open": 105,
+            "high": 106,
+            "low": 99,
+            "close": 100,
+        },
+    ]
+
     ind = make_test_indicators(
         fast=[103, 100],
         slow=[102, 101],
