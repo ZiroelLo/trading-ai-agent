@@ -1,6 +1,4 @@
 import math
-
-
 def ema(values, period):
     """EMA seeded with the first available value."""
     if period < 1:
