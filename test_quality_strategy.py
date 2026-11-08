@@ -208,3 +208,245 @@ def test_pullback_rejects_missing_adx():
 
 def test_detect_quality_signals_invalid_index():
     assert detect_quality_signals([], {}, 0) == []
+# ==========================================
+# ADVANCED QUALITY EDITION TESTS
+# ==========================================
+
+def make_test_indicators(
+    fast,
+    slow,
+    ema13=101,
+    ema21=104,
+    ema50=103,
+    atr=2,
+    adx=25,
+):
+    return {
+        "fast": fast,
+        "slow": slow,
+        "pullback": [ema13] * len(fast),
+        "ema21": [ema21] * len(fast),
+        "ema50": [ema50] * len(fast),
+        "atr": [atr] * len(fast),
+        "adx": [adx] * len(fast),
+    }
+
+
+def test_adx_strong_one_directional_market():
+    high = [100.0 + i for i in range(40)]
+    low = [98.0 + i for i in range(40)]
+    close = [99.0 + i for i in range(40)]
+
+    result = calculate_adx(high, low, close, 14)
+
+    assert result["plus_di"][27] == pytest.approx(100.0)
+    assert result["minus_di"][27] == pytest.approx(0.0)
+    assert result["dx"][27] == pytest.approx(100.0)
+    assert result["adx"][27] == pytest.approx(100.0)
+
+
+def test_modified_crossover_buy():
+    candles = [
+        {
+            "open": 100,
+            "high": 106,
+            "low": 99,
+            "close": 105,
+        }
+    ]
+
+    ind = make_test_indicators(
+        fast=[100, 103],
+        slow=[101, 102],
+        ema21=102,
+        ema50=101,
+        adx=25,
+    )
+
+    assert detect_modified_crossover(candles, ind, 1) == "BUY"
+
+
+def test_modified_crossover_sell():
+    candles = [
+        {
+            "open": 105,
+            "high": 106,
+            "low": 99,
+            "close": 100,
+        }
+    ]
+
+    ind = make_test_indicators(
+        fast=[103, 100],
+        slow=[102, 101],
+        ema21=101,
+        ema50=102,
+        adx=25,
+    )
+
+    assert detect_modified_crossover(candles, ind, 1) == "SELL"
+
+
+def test_modified_crossover_does_not_require_wick_rejection():
+    candles = [
+        {
+            "open": 100,
+            "high": 106,
+            "low": 99,
+            "close": 105,
+        }
+    ]
+
+    ind = make_test_indicators(
+        fast=[100, 103],
+        slow=[101, 102],
+        ema21=102,
+        ema50=101,
+        adx=25,
+    )
+
+    confirmation = validate_candle(candles[0])
+
+    assert confirmation["lower_wick"] < confirmation["body"]
+    assert detect_modified_crossover(candles, ind, 1) == "BUY"
+
+
+def test_modified_crossover_rejects_adx_below_20():
+    candles = [{
+        "open": 100,
+        "high": 106,
+        "low": 99,
+        "close": 105,
+    }]
+
+    ind = make_test_indicators(
+        fast=[100, 103],
+        slow=[101, 102],
+        ema21=102,
+        ema50=101,
+        adx=19.99,
+    )
+
+    assert detect_modified_crossover(candles, ind, 1) is None
+
+
+def test_modified_crossover_accepts_adx_exactly_20():
+    candles = [{
+        "open": 100,
+        "high": 106,
+        "low": 99,
+        "close": 105,
+    }]
+
+    ind = make_test_indicators(
+        fast=[100, 103],
+        slow=[101, 102],
+        ema21=102,
+        ema50=101,
+        adx=20.0,
+    )
+
+    assert detect_modified_crossover(candles, ind, 1) == "BUY"
+
+
+def test_pullback_ema13_buy():
+    candles = [{
+        "open": 102,
+        "high": 107,
+        "low": 97,
+        "close": 106,
+    }]
+
+    ind = make_test_indicators(
+        fast=[100],
+        slow=[101],
+        ema13=101,
+        ema21=104,
+        ema50=103,
+        adx=25,
+    )
+
+    assert detect_pullback_ema13(candles, ind, 0) == "BUY"
+
+
+def test_pullback_ema13_sell():
+    candles = [{
+        "open": 106,
+        "high": 111,
+        "low": 101,
+        "close": 102,
+    }]
+
+    ind = make_test_indicators(
+        fast=[100],
+        slow=[101],
+        ema13=107,
+        ema21=104,
+        ema50=105,
+        adx=25,
+    )
+
+    assert detect_pullback_ema13(candles, ind, 0) == "SELL"
+
+
+def test_pullback_rejects_missing_wick_rejection():
+    candles = [{
+        "open": 102,
+        "high": 107,
+        "low": 100,
+        "close": 106,
+    }]
+
+    ind = make_test_indicators(
+        fast=[100],
+        slow=[101],
+        ema13=101,
+        ema21=104,
+        ema50=103,
+        adx=25,
+    )
+
+    confirmation = validate_candle(candles[0])
+
+    assert confirmation["lower_wick"] < confirmation["body"]
+    assert detect_pullback_ema13(candles, ind, 0) is None
+
+
+def test_pullback_rejects_adx_below_20():
+    candles = [{
+        "open": 102,
+        "high": 107,
+        "low": 97,
+        "close": 106,
+    }]
+
+    ind = make_test_indicators(
+        fast=[100],
+        slow=[101],
+        ema13=101,
+        ema21=104,
+        ema50=103,
+        adx=19.99,
+    )
+
+    assert detect_pullback_ema13(candles, ind, 0) is None
+
+
+def test_pullback_rejects_wrong_trend():
+    candles = [{
+        "open": 102,
+        "high": 107,
+        "low": 97,
+        "close": 106,
+    }]
+
+    ind = make_test_indicators(
+        fast=[100],
+        slow=[101],
+        ema13=101,
+        ema21=103,
+        ema50=104,
+        adx=25,
+    )
+
+    assert detect_pullback_ema13(candles, ind, 0) is None
