@@ -1,5 +1,6 @@
 
 import pytest
+import math
 
 from quality_strategy import (
     ema,
@@ -485,3 +486,37 @@ def test_pullback_rejects_wrong_trend():
     )
 
     assert detect_pullback_ema13(candles, ind, 0) is None
+def test_adx14_against_independent_reference_values():
+    high = []
+    low = []
+    close = []
+
+    for i in range(50):
+        c = 2000 + 0.35 * i + 2.2 * math.sin(i * 0.7)
+        o = c - 0.4 * math.cos(i * 0.31)
+
+        high.append(max(o, c) + 0.8 + 0.15 * (i % 3))
+        low.append(min(o, c) - 0.7 - 0.1 * (i % 4))
+        close.append(c)
+
+    result = calculate_adx(high, low, close, 14)
+
+    reference = {
+        27: (32.1664832473, 12.5765699904, 43.7831391453, 37.9015865073),
+        28: (35.3645655597, 11.4074894559, 51.2209183365, 38.8529673522),
+        35: (28.5800435952, 13.8921486466, 34.5823800783, 38.6290018634),
+        49: (31.3235497170, 12.9628489601, 41.4590061628, 40.7740750241),
+    }
+
+    for index, expected in reference.items():
+        actual = (
+            result["plus_di"][index],
+            result["minus_di"][index],
+            result["dx"][index],
+            result["adx"][index],
+        )
+
+        for actual_value, expected_value in zip(actual, expected):
+            assert actual_value == pytest.approx(
+                expected_value, abs=1e-8
+            )
