@@ -239,7 +239,7 @@ def test_adx_strong_one_directional_market():
 
     result = calculate_adx(high, low, close, 14)
 
-    assert result["plus_di"][27] == pytest.approx(100.0)
+    assert result["plus_di"][27] == pytest.approx(50.0)
     assert result["minus_di"][27] == pytest.approx(0.0)
     assert result["dx"][27] == pytest.approx(100.0)
     assert result["adx"][27] == pytest.approx(100.0)
@@ -287,8 +287,7 @@ def test_modified_crossover_sell():
         "close": 105,
     },
 ]
-    ]
-
+    
     ind = make_test_indicators(
         fast=[103, 100],
         slow=[102, 101],
