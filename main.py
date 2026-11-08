@@ -5,7 +5,10 @@ from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 from data_provider import get_closed_candles
-from strategy import calculate_indicators, detect_signals
+from quality_strategy import (
+    calculate_quality_indicators,
+    detect_quality_signals,
+)
 from chart import make_signal_chart
 from database import (
     init_db, insert_signal, get_open_positions, update_position,
@@ -115,12 +118,11 @@ def run_scan():
 
     init_db()
     candles = get_closed_candles()
-    indicators = calculate_indicators(candles)
-
+    indicators = calculate_quality_indicators(candles)
     # Update previously opened virtual positions first.
     track_open_positions(candles)
 
-    signals = detect_signals(candles, indicators)
+    signals = detect_quality_signals(candles, indicators)
     candle = candles[-1]
     entry = candle["close"]
     atr = indicators["atr"][-1]
